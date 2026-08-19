@@ -1,0 +1,13 @@
+.worktrees/
+.superpowers/
+docs/superpowers/plans/
+.DS_Store
+__pycache__/
+.pytest_cache/
+*.pyc
+.venv/
+*.egg-info/
+.plan-security/
+*.scan.json
+*.findings.json
+*.gate.json

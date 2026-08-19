@@ -1,0 +1,244 @@
+{
+  "copyright": "Licensed under the Apache License, Version 2.0. This file has been modified from its original form. See NOTICE.",
+  "license": "Apache-2.0",
+  "matchers": [
+    {
+      "slug": "auth-boundary",
+      "description": "Plan mentions an HTTP, RPC, webhook, or server-action ingress surface",
+      "noiseTier": "noisy",
+      "cwe": ["CWE-306", "CWE-285"],
+      "patterns": [
+        {
+          "regex": "\\b(endpoint|route handler|server action|rest api|graphql|webhook|rpc)s?\\b",
+          "label": "ingress surface",
+          "flags": "i"
+        }
+      ],
+      "examples": [
+        "Add a POST /api/invoices endpoint",
+        "Create a Next.js server action for checkout"
+      ]
+    },
+    {
+      "slug": "injection-sql",
+      "description": "Plan builds SQL with string concatenation or raw queries",
+      "noiseTier": "precise",
+      "cwe": ["CWE-89"],
+      "patterns": [
+        {
+          "regex": "\\b(raw sql|f-string sql|string concatenat\\w* query|db\\.raw|whereRaw|text\\s*\\(\\s*['\\\"])|\\$queryRaw",
+          "label": "raw SQL",
+          "flags": "i"
+        }
+      ],
+      "examples": [
+        "Query with raw SQL from the search box",
+        "Use Prisma.$queryRaw with string concatenation"
+      ]
+    },
+    {
+      "slug": "ssrf",
+      "description": "Plan fetches a URL taken from user input, a webhook, or a request body",
+      "noiseTier": "precise",
+      "cwe": ["CWE-918"],
+      "patterns": [
+        {
+          "regex": "\\b(fetch|axios|http\\.get|requests\\.(get|post))[^\\n]{0,80}(user|request|webhook|callback)[^\\n]{0,40}url",
+          "label": "fetch untrusted URL",
+          "flags": "i"
+        }
+      ],
+      "examples": [
+        "fetch the user-provided URL on the server",
+        "axios.get the webhook callback URL"
+      ]
+    },
+    {
+      "slug": "path-traversal",
+      "description": "Plan joins user input into filesystem paths or handles uploads without a sandbox",
+      "noiseTier": "precise",
+      "cwe": ["CWE-22"],
+      "patterns": [
+        {
+          "regex": "\\b(path\\.join|os\\.path\\.join|sendfile|send_from_directory|file upload)s?\\b",
+          "label": "path join or upload",
+          "flags": "i"
+        }
+      ],
+      "examples": [
+        "path.join the uploads directory with the filename from the request",
+        "Add a file upload endpoint that writes to disk"
+      ]
+    },
+    {
+      "slug": "xss",
+      "description": "Plan renders HTML or Markdown from stored or user content",
+      "noiseTier": "normal",
+      "cwe": ["CWE-79"],
+      "patterns": [
+        {
+          "regex": "\\b(dangerouslysetinnerhtml|innerhtml|markdown render|html_safe|\\{!!)",
+          "label": "HTML render",
+          "flags": "i"
+        }
+      ],
+      "examples": [
+        "Render comments with dangerouslySetInnerHTML",
+        "Use markdown render for user bios"
+      ]
+    },
+    {
+      "slug": "secrets",
+      "description": "Plan hardcodes credentials or commits env files",
+      "noiseTier": "precise",
+      "cwe": ["CWE-798"],
+      "patterns": [
+        {
+          "regex": "\\b(api[_-]?key|secret[_-]?key|aws_secret|begin private key|commit .+\\.env)",
+          "label": "secret material",
+          "flags": "i"
+        }
+      ],
+      "examples": [
+        "Hardcode the Stripe api_key in the client",
+        "Commit the .env file so deploys work"
+      ]
+    },
+    {
+      "slug": "command-injection",
+      "description": "Plan executes a shell command built from untrusted input",
+      "noiseTier": "precise",
+      "cwe": ["CWE-78"],
+      "patterns": [
+        {
+          "regex": "\\b(subprocess|os\\.system|child_process|exec\\(|eval\\()[^\\n]{0,60}(user|request|filename|url)",
+          "label": "exec untrusted",
+          "flags": "i"
+        }
+      ],
+      "examples": [
+        "subprocess the user-supplied filename through ffmpeg",
+        "child_process.exec the URL from the request"
+      ]
+    },
+    {
+      "slug": "insecure-deser",
+      "description": "Plan deserializes untrusted data with pickle, yaml.load, or unserialize",
+      "noiseTier": "precise",
+      "cwe": ["CWE-502"],
+      "patterns": [
+        {
+          "regex": "\\b(pickle\\.loads|yaml\\.load|unserialize\\()",
+          "label": "insecure deserialize",
+          "flags": "i"
+        }
+      ],
+      "examples": [
+        "pickle.loads the cache blob from Redis",
+        "yaml.load the user-supplied pipeline file"
+      ]
+    },
+    {
+      "slug": "cors-wildcard",
+      "description": "Plan sets a wildcard CORS origin",
+      "noiseTier": "precise",
+      "cwe": ["CWE-942"],
+      "patterns": [
+        {
+          "regex": "access-control-allow-origin[^\\n]{0,20}\\*|cors\\([^\\n]*origin:\\s*['\\\"]\\*",
+          "label": "CORS wildcard",
+          "flags": "i"
+        }
+      ],
+      "examples": [
+        "Set Access-Control-Allow-Origin: * on the API",
+        "Enable cors({ origin: '*' }) for local testing and leave it"
+      ]
+    },
+    {
+      "slug": "webhook-unverified",
+      "description": "Plan adds an inbound webhook without mentioning signature or HMAC verification",
+      "noiseTier": "normal",
+      "cwe": ["CWE-345"],
+      "patterns": [
+        {
+          "regex": "\\b(stripe|github|slack|twilio)?\\s*webhook\\b",
+          "label": "webhook",
+          "flags": "i"
+        }
+      ],
+      "examples": [
+        "Add a Stripe webhook that marks invoices paid",
+        "Receive the GitHub webhook and deploy"
+      ]
+    },
+    {
+      "slug": "mass-assignment",
+      "description": "Plan writes request bodies straight into persistence",
+      "noiseTier": "normal",
+      "cwe": ["CWE-915"],
+      "patterns": [
+        {
+          "regex": "\\b(request\\.all\\(|spread .*body|\\$request->all\\(|mass assign)",
+          "label": "mass assignment",
+          "flags": "i"
+        }
+      ],
+      "examples": [
+        "Update the user with request.all()",
+        "Spread the body into prisma.user.update"
+      ]
+    },
+    {
+      "slug": "crypto-weak",
+      "description": "Plan uses weak password hashing or JWT alg none",
+      "noiseTier": "precise",
+      "cwe": ["CWE-327"],
+      "patterns": [
+        {
+          "regex": "(password\\w*[^\\n]{0,40}\\b(md5|sha1)\\b|\\b(md5|sha1)\\b[^\\n]{0,40}password|jwt[^\\n]{0,40}\\bnone\\b|homegrown (crypto|hash))",
+          "label": "weak crypto",
+          "flags": "i"
+        }
+      ],
+      "examples": [
+        "Hash passwords with md5 for speed",
+        "Accept JWT alg none for the mobile client"
+      ]
+    },
+    {
+      "slug": "agent-tool-egress",
+      "description": "Plan gives an AI agent a tool that runs shell or fetches arbitrary URLs",
+      "noiseTier": "precise",
+      "cwe": ["CWE-77"],
+      "patterns": [
+        {
+          "regex": "\\b(agent tool|tool call)\\b[^\\n]{0,80}\\b(shell|bash|fetch|http request|exec)\\b",
+          "label": "agent egress tool",
+          "flags": "i"
+        }
+      ],
+      "examples": [
+        "Add an agent tool that runs bash on the host",
+        "The tool call may fetch any URL the model provides"
+      ]
+    },
+    {
+      "slug": "ci-untrusted-checkout",
+      "description": "Plan runs pull-request code in CI with secrets or write permissions",
+      "noiseTier": "normal",
+      "cwe": ["CWE-829"],
+      "patterns": [
+        {
+          "regex": "\\b(pull_request|pull request)\\b[^\\n]{0,80}\\b(secrets\\.|write-all|pull-requests:\\s*write)",
+          "label": "untrusted CI",
+          "flags": "i"
+        }
+      ],
+      "examples": [
+        "On pull_request, npm install then use secrets.NPM_TOKEN",
+        "pull_request job with pull-requests: write and pnpm test"
+      ]
+    }
+  ]
+}
